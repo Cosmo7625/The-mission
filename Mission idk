@@ -1,0 +1,117 @@
+// Canvas and context setup
+const canvas = document.getElementById("canvas");
+const context = canvas.getContext("2d");
+
+// Set up cat image
+const catImage = new Image();
+catImage.src = "cat.png";
+let catX = 10;
+let catY = canvas.height / 2;
+
+// Set up Mars image
+const marsImage = new Image();
+marsImage.src = "mars.png";
+const marsX = canvas.width - 100;
+const marsY = canvas.height / 2 - 50;
+
+// Set up keyboard input handling
+document.addEventListener("keydown", moveCat);
+
+function moveCat(e) {
+  if (e.key === "ArrowUp") {
+    catY -= 10;
+  } else if (e.key === "ArrowDown") {
+    catY += 10;
+  }
+}
+
+// Set up obstacle generation
+let obstacles = [];
+let points = 0;
+let gameStatus = "in progress";
+
+function generateObstacle() {
+  let obstacle = {
+    x: canvas.width + Math.random() * 100,
+    y: Math.random() * canvas.height,
+    width: 20 + Math.random() * 40,
+    height: 20 + Math.random() * 40,
+    speed: 5 + Math.random() * 3
+  };
+  obstacles.push(obstacle);
+}
+
+function updateObstacles() {
+  for (let i = 0; i < obstacles.length; i++) {
+    obstacles[i].x -= obstacles[i].speed;
+    if (obstacles[i].x < -obstacles[i].width) {
+      obstacles.splice(i, 1);
+      i--;
+    } else if (
+      catX < obstacles[i].x + obstacles[i].width &&
+      catX + 50 > obstacles[i].x &&
+      catY < obstacles[i].y + obstacles[i].height &&
+      catY + 50 > obstacles[i].y
+    ) {
+      obstacles.splice(i, 1);
+      i--;
+      points -= 10;
+      if (points < 0) {
+        gameStatus = "game over";
+      }
+    } else if (obstacles[i].x < marsX) {
+      obstacles.splice(i, 1);
+      i--;
+      points++;
+    }
+  }
+}
+
+// Set up game loop
+function gameLoop() {
+  // Clear canvas
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw mars and cat
+  context.drawImage(marsImage, marsX, marsY, 100, 100);
+  context.drawImage(catImage, catX, catY, 50, 50);
+
+  // Draw obstacles
+  for (let i = 0; i < obstacles.length; i++) {
+    context.fillStyle = "red";
+    context.fillRect(
+      obstacles[i].x,
+      obstacles[i].y,
+      obstacles[i].width,
+      obstacles[i].height
+    );
+  }
+
+  // Update obstacles
+  updateObstacles();
+
+  // Generate new obstacles
+  if (obstacles.length < 10 && gameStatus === "in progress") {
+    generateObstacle();
+  }
+
+  // Draw points
+  context.fillStyle = "white";
+  context.font = "30px Arial";
+  context.fillText("Points: " + points, 10, 40);
+
+  // Check game status
+  if (gameStatus === "in progress") {
+    requestAnimationFrame(gameLoop);
+  } else {
+    context.fillStyle = "black";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "red";
+    context.font = "50px Arial";
+    context.fillText("Game Over", canvas.width / 2 - 150, canvas.height / 2);
+  }
+}
+
+// Start game loop
+gameLoop();
+```
